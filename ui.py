@@ -10,17 +10,30 @@ class LLMASRHandler:
         self.llm_model = LLM(llm_path)
     def interact(self, audio):
         text = self.asr_model.transcribe(audio)
-        reply = self.llm_model.generate(text)
-        return reply
+        text = text.replace(" ", "")
+        stream = self.llm_model.generate(text)
+        context = ""
+        for s in stream:
+            context += s["choices"][0]["delta"].get("content", "")
+            yield context
 
 if __name__ == "__main__":
     handler = LLMASRHandler(
-        os.path.join("models", "asr", "model_file_here"),
-        os.path.join("models", "llm", "model_file_here")
+        asr_path = os.path.join("models", "asr"),
+        llm_path = os.path.join("models", "llm", "MiniCPM-2B-dpo-q4km-gguf.gguf")
         )
     demo = gr.Interface(
-        fn = handler.interact,
-        inputs = ["text"],
-        outputs = ["text"],
+        fn = handler.interact, 
+        inputs=gr.Microphone(
+            label="Recording",
+            show_label=True,
+            show_download_button=True,
+            type="numpy"
+        ),
+        outputs="text",
+        examples=[
+            ["E:\\H5games\\LLM_ASR\\models\\tmp\\nihao.wav"]
+        ]
     )
+    demo.queue()
     demo.launch()
