@@ -8,6 +8,7 @@ class LLMASRHandler:
     def __init__(self, llm_path, asr_path):
         self.asr_model = ASR(asr_path)
         self.llm_model = LLM(llm_path)
+
     def interact(self, audio):
         text = self.asr_model.transcribe(audio)
         text = text.replace(" ", "")
@@ -32,7 +33,7 @@ if __name__ == "__main__":
         ),
         outputs="text",
         examples=[
-            ["E:\\H5games\\LLM_ASR\\models\\tmp\\nihao.wav"]
+            [".\\example\\nihao.wav"]
         ]
     )
     demo.queue()
