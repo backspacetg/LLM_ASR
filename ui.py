@@ -1,12 +1,17 @@
 import os
+import logging
 import gradio as gr
 
 from asr import ASR
 from llm import LLM
 
+LOG_FORMAT = "[%(asctime)s:%(module)s:%(lineno)d] %(levelname)s: %(message)s"
+logger = logging.getLogger(__name__)
+logging.basicConfig(format=LOG_FORMAT, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
+
 class LLMASRHandler:
     def __init__(self, llm_path, asr_path):
-        self.asr_model = ASR(asr_path, use_svd_model=("svd" in asr_path))
+        self.asr_model = ASR(asr_path, use_svd_model=True)
         self.llm_model = LLM(llm_path)
 
     def interact(self, audio):
@@ -18,12 +23,13 @@ class LLMASRHandler:
             for s in stream:
                 context += s["choices"][0]["delta"].get("content", "")
                 yield context
+            self.llm_model.update_history(text, context)
         else:
             return "Try Again"
 
 if __name__ == "__main__":
     handler = LLMASRHandler(
-        asr_path = os.path.join("models", "asr", "paraformer_svd"),
+        asr_path = os.path.join("models", "asr", "paraformer_wenet_svd"),
         llm_path = os.path.join("models", "llm", "MiniCPM-2B-dpo-q4km-gguf.gguf")
         )
     demo = gr.Interface(

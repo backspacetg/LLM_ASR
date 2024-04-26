@@ -3,24 +3,19 @@ import time
 import numpy as np
 import librosa
 import soundfile as sf
-from omegaconf import OmegaConf
-from paraformer.auto.auto_model import AutoModel
+from basic_wenet.paraformer_svd.transcriber import ParaformerTranscriber as SVDTranscriber
 
 class ASR:
     def __init__(self, model_path, use_svd_model=True): # 加载模型
-        if use_svd_model:
-            model_args = OmegaConf.load(os.path.join(model_path, "config.yaml"))
-            model_args["model_path"] = model_path # os.path.join(model_path, "model.pt.avg3")
-            model_args["init_param"] = os.path.join(model_path, "model.pt.avg3")
-            model_args["tokenizer_conf"]["token_list"] = os.path.join(model_path, "tokens.json")
-            model_args["tokenizer_conf"]["seg_dict"] = os.path.join(model_path, "seg_dict")
-            model_args["frontend_conf"]["cmvn_file"] = os.path.join(model_path, "am.mvn")
-            model_args["output_dir"] = None
-            self.model = AutoModel(**model_args)
-        else:
-            self.model = AutoModel(model=model_path, device='cpu')
+        self.model = SVDTranscriber(
+            model_path=os.path.join(model_path, "model.pt"),
+            config_path=os.path.join(model_path, "train.yaml"),
+            use_svd=use_svd_model,
+            keep_rate_att=0.25,
+            keep_rate_linear=0.6
+            )
         print("warming the asr model...")
-        res = self.model.generate(input=".\\example\\nihao.wav", key="001", disable_pbar=False)
+        res = self.model.transcibe(source_path="models\\tmp\l.wav", key="001")
         print(res)
 
     def transcribe(self, wav) -> str:
@@ -34,7 +29,7 @@ class ASR:
         sf.write("models\\tmp\\tmp.wav", wav_data, samplerate=16000)
         wav_time = len(wav_data)/16000
         start_time = time.time()
-        result = self.model.generate(input="models\\tmp\\tmp.wav", key="001", disable_pbar=False)[0]["text"]
+        result = self.model.transcibe(source_path="models\\tmp\\tmp.wav", key="001")
         time_used = time.time() - start_time
         print("asr result: {}, RTF: {}".format(result, time_used/wav_time))
         return result
