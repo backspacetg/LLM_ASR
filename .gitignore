@@ -152,7 +152,6 @@ data
 data/
 misc/
 *.npy
-*.txt
 *.log
 *.png
 *2.*

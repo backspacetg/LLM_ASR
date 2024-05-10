@@ -1,0 +1,5 @@
+llama-cpp-python
+torch
+torchaudio
+tqdm
+gradio
