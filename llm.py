@@ -35,7 +35,7 @@ class LLM:
             stream=True
         )
         return stream
-    
+
     def update_history(self, user_input: str, bot_output: str):
         self.bot_outputs.append(bot_output)
         if len(self.bot_outputs) > self.max_history_len:

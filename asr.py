@@ -1,8 +1,10 @@
 import os
 import time
 import numpy as np
-import librosa
-import soundfile as sf
+
+import torch
+import torchaudio
+import torchaudio.transforms as T
 from basic_wenet.paraformer_svd.transcriber import ParaformerTranscriber as SVDTranscriber
 
 class ASR:
@@ -15,7 +17,7 @@ class ASR:
             keep_rate_linear=0.6
             )
         print("warming the asr model...")
-        res = self.model.transcibe(source_path="models\\tmp\l.wav", key="001")
+        res = self.model.transcibe(source_path=os.path.join("example", "nihao.wav"), key="001")
         print(res)
 
     def transcribe(self, wav) -> str:
@@ -25,11 +27,13 @@ class ASR:
         print(sr, wav_data)
         if len(wav_data.shape) > 1: #2 channels
             wav_data = np.mean(wav_data, axis=1)
-        wav_data = librosa.resample(wav_data, orig_sr=sr, target_sr=16000)
-        sf.write("models\\tmp\\tmp.wav", wav_data, samplerate=16000)
-        wav_time = len(wav_data)/16000
+        resampler = T.Resample(orig_freq=sr, new_freq=16000)
+        wav_data = torch.from_numpy(wav_data).unsqueeze(0)
+        wav_data = resampler(wav_data)
+        torchaudio.save(os.path.join("models", "tmp", "tmp.wav"), wav_data, sample_rate=16000)
+        wav_time = wav_data.shape[1]/16000
         start_time = time.time()
-        result = self.model.transcibe(source_path="models\\tmp\\tmp.wav", key="001")
+        result = self.model.transcibe(source_path=os.path.join("models", "tmp", "tmp.wav"), key="001")
         time_used = time.time() - start_time
         print("asr result: {}, RTF: {}".format(result, time_used/wav_time))
         return result

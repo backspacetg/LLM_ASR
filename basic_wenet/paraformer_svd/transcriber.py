@@ -1,7 +1,5 @@
 import logging
 
-import kaldiio
-
 import torch
 import torchaudio
 
@@ -53,9 +51,6 @@ class ParaformerTranscriber:
             sample['sample_rate'] = sr
             sample = compute_fbank(sample=sample, **self.config['dataset_conf']['fbank_conf'])
             sample['feat'] = sample['feat'].unsqueeze(0).to(self.device)
-        elif source_type == "kaldi_fbank":
-            feat = torch.Tensor(kaldiio.load_mat(source_path)).unsqueeze(0).to(self.device)
-            sample = {"feat": feat, "key": key}
         else:
             raise NotImplementedError(source_type)
         sample["feat_length"] = torch.Tensor([sample["feat"].shape[1]]).to(dtype=torch.int32, device=self.device)

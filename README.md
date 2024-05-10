@@ -4,8 +4,6 @@
 * llama-cpp-python
 * torch
 * torchaudio
-* kaldiio
-* librosa
 * tqdm
 * gradio
 
